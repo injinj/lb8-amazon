@@ -1,0 +1,174 @@
+The Amazon Quanta LB8
+=====================
+:toc:
+
+Introduction
+------------
+
+I have acquired a strange piece of history:  A Quanta LB8 switch loaded with an
+early version of the Cumulus NOS customized and deployed at Amazon.  The LB8 is
+a 48 port 10gbe switch based on the
+https://people.ucsc.edu/~warner/Bufs/trident[Broadcom Trident BCM56840]
+platform.  This is the login screen I am greeted with when I shell into it.
+
+--------------------------------------
+Linux acc-sw-172-X-X-X 3.2.35-almach+ #1 SMP Tue Dec 16 22:53:15 UTC 2014 ppc
+    _    _                      _
+   / \  | |_ __ ___   __ _  ___| |__
+  / _ \ | | '_ ` _ \ / _` |/ __| '_ \
+ / ___ \| | | | | | | (_| | (__| | | |
+/_/   \_\_|_| |_| |_|\__,_|\___|_| |_|
+
+The Amazon software stack for commodity network devices.
+Help   : /usr/bin/almach-help   
+Runbook: https://w.amazon.com/index.php/Almach/HowToUseAlmach
+Contact: almach-core@amazon.com
+
+almach-v0.11.14
+built 2014-12-16
+--------------------------------------
+
+Googling any of this info turns up nothing, so it's not clear if this software
+was ever used outside of the internal Amazon network.  The BCM SDK version used
+is 6.3.5 and the Linux kernel is 3.2.25 with a Debian 6 userland.  I'm pretty
+sure this switch was never intended to leave it's home without erasure, since
+it contains about 1300 usernames with ssh pubkeys and ec2 certs for automatic
+configuration.
+
+Logging In
+----------
+
+The switch was deployed using automation tools that disabled ssh logins with a
+password.  To get into the switch and configure it, I needed a to boot it in
+single user mode and update the password file.  This can be done by stopping
+uboot with 'ctrl-c' and changing the init process to bash.
+
+--------------------------------------
+> setenv ramfsargs=setenv bootargs ${bootargs} rdinit=/bin/bash
+> boot
+--------------------------------------
+
+After the Linux kernel loads, it will spawn the bash shell instead of init.
+Within init, I mounted the persisted configuration and added a login for
+myself.
+
+--------------------------------------
+# mount -t proc proc /proc
+# mount -t sysfs sys /sys
+# mount -t devpts devpts /dev/pts
+# mount -t jffs2 /mnt/mtdblock4 /mnt/persist
+# vi /mnt/persist/etc/passwd
+--------------------------------------
+
+Amazon Configuration
+--------------------
+
+The existing configuration had two components, a Layer 2 bridge and a Layer 3
+OSPF network.  It looked like the switch was deployed as a TOR, where ports 1
+-> 38 was a 172.X.X.X/24 L2 network and ports 39 and 40 were used for Layer 3
+OSPF routing in a redundant ECMP network.  A Cumulus configuration mirrors that
+of a normal Debian setup, where */etc/network/interfaces* defines the ports and
+the bridge, and */etc/quagga/{zebra.conf,ospfd.conf}* defines the OSPF routing.
+The hosts attached to the switch used a dhcpd proxy to grab addresses on the
+172.X.X.X/24 network.
+
+The */mnt/persist* mount point is the only thing which is saved across reboots.
+There is a 'cron' job defined that maintains this by copying files over when
+they have been updated.  Another 'cron' job pulls the user creds from ec2 in
+order to maintain a centralized database of admins, this is how the switch came
+to have 1300 user accounts.
+
+Equal Cost MultiPath (ECMP)
+---------------------------
+
+In order to use the switch in my lab, I mirrored the configuration that I used
+on the https://github.com/injinj/lb6m-ospf/blob/master/lb6m.adoc[LB6M] in order
+to test ECMP on the LB8.  Cumulus on the LB8 uses a standard Debian network
+setup, these are the necessary files: link:interfaces[/etc/network/interfaces],
+link:zebra.conf[/etc/quagga/zebra.conf], and
+link:ospfd.conf[/etc/quagga/ospfd.conf].  Here is the route table on the LB8
+after my configuration replaced the Amazon configuration.
+
+--------------------------------------
+root@lb8:~# vtysh
+
+Hello, this is Quagga (version 0.99.21).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+lb8# show ip route
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, A - Babel,
+       > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 10.3.2.1, eth0
+O   10.1.10.0/30 [110/10] is directly connected, jrp1, 01:00:21
+C>* 10.1.10.0/30 is directly connected, jrp1
+O   10.1.10.24/30 [110/10] is directly connected, jrp7, 01:00:21
+C>* 10.1.10.24/30 is directly connected, jrp7
+O   10.1.10.28/30 [110/10] is directly connected, jrp8, 01:00:21
+C>* 10.1.10.28/30 is directly connected, jrp8
+O   10.1.10.32/30 [110/10] is directly connected, jrp9, 01:00:21
+C>* 10.1.10.32/30 is directly connected, jrp9
+O   10.1.10.36/30 [110/10] is directly connected, jrp10, 01:00:21
+C>* 10.1.10.36/30 is directly connected, jrp10
+O   10.1.10.40/30 [110/10] is directly connected, jrp11, 01:00:21
+C>* 10.1.10.40/30 is directly connected, jrp11
+O   10.1.10.44/30 [110/10] is directly connected, jrp12, 01:00:20
+C>* 10.1.10.44/30 is directly connected, jrp12
+O   10.1.10.48/30 [110/10] is directly connected, jrp13, 01:00:17
+C>* 10.1.10.48/30 is directly connected, jrp13
+O   10.1.10.52/30 [110/10] is directly connected, jrp14, 01:00:16
+C>* 10.1.10.52/30 is directly connected, jrp14
+C>* 10.3.2.0/24 is directly connected, eth0
+O>* 10.10.37.0/24 [110/20] via 10.1.10.54, jrp14, 00:59:56
+  *                        via 10.1.10.50, jrp13, 00:59:56
+O>* 10.10.74.0/24 [110/20] via 10.1.10.26, jrp7, 01:00:02
+  *                        via 10.1.10.30, jrp8, 01:00:02
+O>* 10.10.120.0/24 [110/20] via 10.1.10.2, jrp1, 00:39:25
+O>* 10.10.121.0/24 [110/20] via 10.1.10.46, jrp12, 01:00:02
+  *                         via 10.1.10.34, jrp9, 01:00:02
+  *                         via 10.1.10.38, jrp10, 01:00:02
+  *                         via 10.1.10.42, jrp11, 01:00:02
+C>* 127.0.0.0/8 is directly connected, lo
+C>* 127.0.0.1/32 is directly connected, lo
+--------------------------------------
+
+Cumulus includes a tool called 'ecmpcalc' which will show the interfaces a
+route will take when there are multiple interfaces possible.  The following is
+an example of the path that was taken during the 'iperf' test below.  The '-c
+4' argument tells 'ecmpcalc' that there are 4 possible interfaces and the
+resulting number is the interface that the TCP connection used.
+
+--------------------------------------
+root@lb8:~# ecmpcalc -p tcp -i jrp1 -c 4 -s 10.1.10.2 --sport 33780 -d 10.10.121.1 --dport 5001
+ecmpcalc: will query hardware
+2
+root@lb8:~# ecmpcalc -p tcp -i jrp8 -c 4 -s 10.1.10.30 --sport 56900 -d 10.10.121.1 --dport 5001
+ecmpcalc: will query hardware
+0
+root@lb8:~# ecmpcalc -p tcp -i jrp13 -c 4 -s 10.1.10.50 --sport 48790 -d 10.10.121.1 --dport 5001
+ecmpcalc: will query hardware
+3
+--------------------------------------
+
+This was the 'iperf' run that used these interfaces.
+
+--------------------------------------
+$ iperf -s
+
+Server listening on TCP port 5001
+TCP window size: 2.00 MByte (default)
+
+[  4] local 10.10.121.1 port 5001 connected with 10.1.10.2 port 33780
+[  5] local 10.10.121.1 port 5001 connected with 10.1.10.30 port 56900
+[  6] local 10.10.121.1 port 5001 connected with 10.1.10.50 port 48790
+[ ID] Interval       Transfer     Bandwidth
+[  4]  0.0-10.0 sec  11.0 GBytes  9.47 Gbits/sec
+[  5]  0.0-10.0 sec  11.0 GBytes  9.45 Gbits/sec
+[  6]  0.0-10.0 sec  11.0 GBytes  9.48 Gbits/sec
+--------------------------------------
+
+The ECMP on the LB8 is a Layer 4 hash calculation which uses the ports and
+protocol in order to derive the exit interface.  I did not (yet) find a way to
+change the algorithm.
+

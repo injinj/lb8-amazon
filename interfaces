@@ -1,0 +1,102 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+auto lo eth0 jrp1 jrp2 jrp3 jrp4 jrp5 jrp6 jrp7 jrp8 jrp9 jrp10 jrp11 jrp12 jrp13 jrp14 jrp15 jrp16 jrp17 jrp18 jrp19 jrp20 jrp21 jrp22 jrp23 jrp24 jrp25 jrp26 jrp27 jrp28 jrp29 jrp30 jrp31 jrp32 jrp33 jrp34 jrp35 jrp36 jrp37 jrp38 jrp39 jrp40 jrp41 jrp42 jrp43 jrp44 jrp45 jrp46 jrp47 jrp48
+iface lo inet loopback
+iface eth0 inet dhcp
+iface jrp1 inet manual
+	up ip link set jrp1 mtu 1500
+iface jrp2 inet manual
+	up ip link set jrp2 mtu 1500
+iface jrp3 inet manual
+	up ip link set jrp3 mtu 1500
+iface jrp4 inet manual
+	up ip link set jrp4 mtu 1500
+iface jrp5 inet manual
+	up ip link set jrp5 mtu 1500
+iface jrp6 inet manual
+	up ip link set jrp6 mtu 1500
+iface jrp7 inet manual
+	up ip link set jrp7 mtu 1500
+iface jrp8 inet manual
+	up ip link set jrp8 mtu 1500
+iface jrp9 inet manual
+	up ip link set jrp9 mtu 1500
+iface jrp10 inet manual
+	up ip link set jrp10 mtu 1500
+iface jrp11 inet manual
+	up ip link set jrp11 mtu 1500
+iface jrp12 inet manual
+	up ip link set jrp12 mtu 1500
+iface jrp13 inet manual
+	up ip link set jrp13 mtu 1500
+iface jrp14 inet manual
+	up ip link set jrp14 mtu 1500
+iface jrp15 inet manual
+	up ip link set jrp15 mtu 1500
+iface jrp16 inet manual
+	up ip link set jrp16 mtu 1500
+iface jrp17 inet manual
+	up ip link set jrp17 mtu 1500
+iface jrp18 inet manual
+	up ip link set jrp18 mtu 1500
+iface jrp19 inet manual
+	up ip link set jrp19 mtu 1500
+iface jrp20 inet manual
+	up ip link set jrp20 mtu 1500
+iface jrp21 inet manual
+	up ip link set jrp21 mtu 1500
+iface jrp22 inet manual
+	up ip link set jrp22 mtu 1500
+iface jrp23 inet manual
+	up ip link set jrp23 mtu 1500
+iface jrp24 inet manual
+	up ip link set jrp24 mtu 1500
+iface jrp25 inet manual
+	up ip link set jrp25 mtu 1500
+iface jrp26 inet manual
+	up ip link set jrp26 mtu 1500
+iface jrp27 inet manual
+	up ip link set jrp27 mtu 1500
+iface jrp28 inet manual
+	up ip link set jrp28 mtu 1500
+iface jrp29 inet manual
+	up ip link set jrp29 mtu 1500
+iface jrp30 inet manual
+	up ip link set jrp30 mtu 1500
+iface jrp31 inet manual
+	up ip link set jrp31 mtu 1500
+iface jrp32 inet manual
+	up ip link set jrp32 mtu 1500
+iface jrp33 inet manual
+	up ip link set jrp33 mtu 1500
+iface jrp34 inet manual
+	up ip link set jrp34 mtu 1500
+iface jrp35 inet manual
+	up ip link set jrp35 mtu 1500
+iface jrp36 inet manual
+	up ip link set jrp36 mtu 1500
+iface jrp37 inet manual
+	up ip link set jrp37 mtu 1500
+iface jrp38 inet manual
+	up ip link set jrp38 mtu 1500
+iface jrp39 inet manual
+	up ip link set jrp39 mtu 1500
+iface jrp40 inet manual
+	up ip link set jrp40 mtu 1500
+iface jrp41 inet manual
+	up ip link set jrp41 mtu 1500
+iface jrp42 inet manual
+	up ip link set jrp42 mtu 1500
+iface jrp43 inet manual
+	up ip link set jrp43 mtu 1500
+iface jrp44 inet manual
+	up ip link set jrp44 mtu 1500
+iface jrp45 inet manual
+	up ip link set jrp45 mtu 1500
+iface jrp46 inet manual
+	up ip link set jrp46 mtu 1500
+iface jrp47 inet manual
+	up ip link set jrp47 mtu 1500
+iface jrp48 inet manual
+	up ip link set jrp48 mtu 1500
